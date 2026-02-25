@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BillVault — Never Miss a Payment</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0f172a;
+      --navy-mid: #1e293b;
+      --navy-light: #1e3a5f;
+      --gold: #c9a84c;
+      --gold-light: #e4c76b;
+      --white: #f1f5f9;
+      --muted: #64748b;
+      --border: #334155;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE TEXTURE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 48px;
+      background: rgba(15,23,42,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+    }
+
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      color: var(--gold);
+      letter-spacing: 1px;
+    }
+
+    .nav-logo span { color: var(--white); }
+
+    .nav-cta {
+      background: var(--gold);
+      color: var(--navy);
+      padding: 10px 24px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 14px;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .nav-cta:hover { background: var(--gold-light); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(ellipse, rgba(201,168,76,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold);
+      padding: 8px 18px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 32px;
+      animation: fadeInUp 0.6s ease both;
+    }
+
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(48px, 8vw, 96px);
+      font-weight: 900;
+      line-height: 1.0;
+      margin-bottom: 24px;
+      animation: fadeInUp 0.6s 0.1s ease both;
+    }
+
+    .hero-title .gold { color: var(--gold); }
+
+    .hero-subtitle {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: var(--muted);
+      max-width: 560px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+      animation: fadeInUp 0.6s 0.2s ease both;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeInUp 0.6s 0.3s ease both;
+    }
+
+    .btn-primary {
+      background: var(--gold);
+      color: var(--navy);
+      padding: 16px 36px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 16px;
+      text-decoration: none;
+      transition: all 0.2s;
+      box-shadow: 0 0 40px rgba(201,168,76,0.3);
+    }
+
+    .btn-primary:hover {
+      background: var(--gold-light);
+      transform: translateY(-2px);
+      box-shadow: 0 0 60px rgba(201,168,76,0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--white);
+      padding: 16px 36px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* ── PHONE MOCKUP ── */
+    .mockup-section {
+      display: flex;
+      justify-content: center;
+      padding: 0 24px 100px;
+      animation: fadeInUp 0.8s 0.4s ease both;
+    }
+
+    .phone-frame {
+      width: 280px;
+      background: var(--navy-mid);
+      border-radius: 40px;
+      border: 2px solid var(--border);
+      padding: 20px 16px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 80px rgba(201,168,76,0.1);
+      position: relative;
+    }
+
+    .phone-notch {
+      width: 80px;
+      height: 24px;
+      background: var(--navy);
+      border-radius: 12px;
+      margin: 0 auto 16px;
+    }
+
+    .phone-screen {
+      background: var(--navy);
+      border-radius: 24px;
+      padding: 16px;
+      min-height: 460px;
+    }
+
+    .app-header {
+      background: var(--navy-light);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .app-header-greeting {
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .app-header-title {
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 700;
+      margin: 4px 0 12px;
+    }
+
+    .summary-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .summary-card {
+      flex: 1;
+      border-radius: 10px;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .summary-card.gold { background: var(--gold); }
+    .summary-card.orange { background: #f97316; }
+    .summary-card.red { background: #ef4444; }
+
+    .summary-value { font-size: 14px; font-weight: 700; color: #fff; }
+    .summary-label { font-size: 8px; color: rgba(255,255,255,0.85); margin-top: 2px; }
+
+    .bill-card {
+      background: var(--navy-mid);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .bill-icon-box {
+      width: 36px; height: 36px;
+      background: var(--navy);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .bill-info { flex: 1; }
+    .bill-name { font-size: 12px; font-weight: 700; color: var(--white); }
+    .bill-recur { font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+    .bill-right { text-align: right; }
+    .bill-amount { font-size: 13px; font-weight: 700; color: var(--gold); }
+
+    .due-badge {
+      font-size: 8px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      margin-top: 4px;
+      display: inline-block;
+    }
+
+    .due-green { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid #22c55e; }
+    .due-orange { background: rgba(249,115,22,0.15); color: #f97316; border: 1px solid #f97316; }
+    .due-red { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid #ef4444; }
+
+    /* ── FEATURES ── */
+    .section {
+      padding: 100px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 5vw, 52px);
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 60px;
+      line-height: 1.2;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--navy-mid);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(201,168,76,0.4);
+      transform: translateY(-4px);
+    }
+
+    .feature-icon {
+      font-size: 36px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 10px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* ── TECH STACK ── */
+    .tech-section {
+      background: var(--navy-mid);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 80px 24px;
+    }
+
+    .tech-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .tech-chip {
+      background: var(--navy);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 10px 20px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--white);
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .tech-chip:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+
+    /* ── MONETIZATION ── */
+    .mono-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .mono-card {
+      background: var(--navy-mid);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .mono-icon { font-size: 28px; margin-bottom: 12px; display: block; }
+    .mono-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+    .mono-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+    /* ── CTA ── */
+    .cta-section {
+      padding: 120px 24px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      bottom: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(ellipse, rgba(201,168,76,0.1) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 900;
+      margin-bottom: 20px;
+    }
+
+    .cta-sub {
+      font-size: 18px;
+      color: var(--muted);
+      margin-bottom: 48px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .price-tag {
+      display: inline-block;
+      font-family: 'Playfair Display', serif;
+      font-size: 64px;
+      font-weight: 900;
+      color: var(--gold);
+      margin-bottom: 32px;
+    }
+
+    .price-tag sup { font-size: 32px; vertical-align: super; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--gold);
+    }
+
+    .footer-text { font-size: 13px; color: var(--muted); }
+
+    /* ── DIVIDER ── */
+    .gold-divider {
+      width: 60px;
+      height: 3px;
+      background: var(--gold);
+      margin: 0 auto 40px;
+      border-radius: 2px;
+    }
+
+    /* ── ANIMATIONS ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      nav { padding: 16px 20px; }
+      .hero { padding: 100px 20px 60px; }
+      footer { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">Bill<span>Vault</span></div>
+    <a href="#buy" class="nav-cta">View Listing</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">💰 Premium Finance App — For Sale</div>
+    <h1 class="hero-title">Never Miss a<br/><span class="gold">Payment Again.</span></h1>
+    <p class="hero-subtitle">BillVault is a professionally built cross-platform bill reminder app with push notifications, smart bill tracking, and a premium Finance Pro design. Ready to launch on iOS and Android.</p>
+    <div class="hero-buttons">
+      <a href="#buy" class="btn-primary">View on Flippa →</a>
+      <a href="#features" class="btn-secondary">See Features</a>
+    </div>
+  </section>
+
+  <!-- PHONE MOCKUP -->
+  <div class="mockup-section">
+    <div class="phone-frame">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="app-header">
+          <div class="app-header-greeting">Good day 👋</div>
+          <div class="app-header-title">Your Bill Dashboard</div>
+          <div class="summary-row">
+            <div class="summary-card gold">
+              <div class="summary-value">$847</div>
+              <div class="summary-label">Total Tracked</div>
+            </div>
+            <div class="summary-card orange">
+              <div class="summary-value">3</div>
+              <div class="summary-label">Due This Week</div>
+            </div>
+            <div class="summary-card red">
+              <div class="summary-value">1</div>
+              <div class="summary-label">Overdue</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bill-card">
+          <div class="bill-icon-box">🏠</div>
+          <div class="bill-info">
+            <div class="bill-name">Rent</div>
+            <div class="bill-recur">🔁 Monthly</div>
+          </div>
+          <div class="bill-right">
+            <div class="bill-amount">$1,200</div>
+            <div class="due-badge due-orange">3 days left</div>
+          </div>
+        </div>
+
+        <div class="bill-card">
+          <div class="bill-icon-box">🎬</div>
+          <div class="bill-info">
+            <div class="bill-name">Netflix</div>
+            <div class="bill-recur">🔁 Monthly</div>
+          </div>
+          <div class="bill-right">
+            <div class="bill-amount">$15.99</div>
+            <div class="due-badge due-green">12 days left</div>
+          </div>
+        </div>
+
+        <div class="bill-card">
+          <div class="bill-icon-box">💳</div>
+          <div class="bill-info">
+            <div class="bill-name">Credit Card</div>
+            <div class="bill-recur">🔁 Monthly</div>
+          </div>
+          <div class="bill-right">
+            <div class="bill-amount">$250</div>
+            <div class="due-badge due-red">2d overdue</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="section" id="features">
+    <div class="section-label">What's Included</div>
+    <h2 class="section-title">Everything a Buyer Needs<br/>to Launch Immediately</h2>
+    <div class="gold-divider"></div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <div class="feature-title">Live Dashboard</div>
+        <div class="feature-desc">Summary cards showing total bills tracked, bills due this week, and overdue count — always visible at a glance.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔔</span>
+        <div class="feature-title">Push Notifications</div>
+        <div class="feature-desc">Automatic reminders sent 3 days before every bill is due. Works on both iOS and Android natively.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔁</span>
+        <div class="feature-title">Recurring Bills</div>
+        <div class="feature-desc">Support for Weekly, Monthly, Quarterly, Yearly, and One-time bills with smart frequency tracking.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎯</span>
+        <div class="feature-title">Smart Bill Icons</div>
+        <div class="feature-desc">Automatically assigns icons based on bill name — Netflix gets 🎬, Rent gets 🏠, Electric gets ⚡ and more.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📅</span>
+        <div class="feature-title">Calendar Date Picker</div>
+        <div class="feature-desc">Native calendar picker for selecting due dates — no typing required. Clean and intuitive UX.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">✨</span>
+        <div class="feature-title">Premium UI</div>
+        <div class="feature-desc">Finance Pro dark theme with navy blue and gold accents. Smooth animations throughout. Looks like a $10/month app.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <div class="tech-section">
+    <div class="section-label" style="text-align:center; margin-bottom: 16px;">Tech Stack</div>
+    <h2 class="section-title" style="font-size: 32px; margin-bottom: 32px;">Built on Industry Standard Tools</h2>
+    <div class="tech-grid">
+      <div class="tech-chip">⚛️ React Native</div>
+      <div class="tech-chip">📱 Expo</div>
+      <div class="tech-chip">🗂️ Expo Router</div>
+      <div class="tech-chip">💾 AsyncStorage</div>
+      <div class="tech-chip">🔔 Expo Notifications</div>
+      <div class="tech-chip">✨ React Native Reanimated</div>
+      <div class="tech-chip">📅 DateTime Picker</div>
+      <div class="tech-chip">🍎 iOS Ready</div>
+      <div class="tech-chip">🤖 Android Ready</div>
+    </div>
+  </div>
+
+  <!-- MONETIZATION -->
+  <section class="section">
+    <div class="section-label">Growth Potential</div>
+    <h2 class="section-title">Ready-Made<br/>Monetization Opportunities</h2>
+    <div class="gold-divider"></div>
+    <div class="mono-grid">
+      <div class="mono-card">
+        <span class="mono-icon">💎</span>
+        <div class="mono-title">Premium Subscription</div>
+        <div class="mono-desc">Add a $2.99/month paywall to unlock unlimited bills and advanced features.</div>
+      </div>
+      <div class="mono-card">
+        <span class="mono-icon">📣</span>
+        <div class="mono-title">Ad Revenue</div>
+        <div class="mono-desc">Integrate Google AdMob banner ads for passive income from free users.</div>
+      </div>
+      <div class="mono-card">
+        <span class="mono-icon">📅</span>
+        <div class="mono-title">Google Calendar Sync</div>
+        <div class="mono-desc">Sync bill due dates to Google Calendar — a premium v2.0 feature buyers will love.</div>
+      </div>
+      <div class="mono-card">
+        <span class="mono-icon">🍎</span>
+        <div class="mono-title">Apple App Store</div>
+        <div class="mono-desc">Not yet submitted — a massive untapped market ready for the buyer to launch.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA / BUY -->
+  <section class="cta-section" id="buy">
+    <div class="section-label">For Sale on Flippa</div>
+    <h2 class="cta-title">Own BillVault Today</h2>
+    <p class="cta-sub">Full source code. Premium design. Cross-platform. Ready to launch on both iOS and Android immediately.</p>
+    <div class="price-tag"><sup>$</sup>900</div>
+    <br/>
+    <a href="https://flippa.com" class="btn-primary" style="font-size: 18px; padding: 20px 48px;">View on Flippa →</a>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">BillVault</div>
+    <div class="footer-text">© 2026 BillVault. Built with React Native + Expo.</div>
+    <div class="footer-text">Never miss a payment.</div>
+  </footer>
+
+</body>
+</html>
